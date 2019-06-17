@@ -1,0 +1,91 @@
+const https = require("https");
+const Axios = require("axios-observable").default;
+
+// URL
+const url = "https://localhost:65154";
+
+// certificate-authority-data base64 decoded
+const certAuthorityData = `-----BEGIN CERTIFICATE-----
+MIICyDCCAbCgAwIBAgIBADANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwprdWJl
+cm5ldGVzMB4XDTE5MDYxNzEzMjMzMVoXDTI5MDYxNDEzMjMzMVowFTETMBEGA1UE
+AxMKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANMv
+KT6moP0FlRXrt2GcZIOSo+cu9ePMZra+AQidGhoxXEtrcXDvOzxpve+By/snfbRc
+EDe69J3vIx1J5n2Oxq8G78NQP1mm84/nggzhE7sSuVSVaCakzp61+71+Gtpe6X1q
+JNLrfRuFHvACyocvzyCb8SKYdgc1HslFoTqhmhxe9kWl7pcYysbEs/N0or+1d2si
+N4FkpDQv+VeWeBj3VASNUJOouwsOZ4gLsKqxWQoJnrS4N1JVFL/qmfeB+eOH1mv6
+DWPO79zNqB+7LUwP6mjV6OrY+sV75CPNtn+83uhMN9AWGK/zFkhb3w2UwFNcBXTS
+utQrr0+99ZcUVnh1VNECAwEAAaMjMCEwDgYDVR0PAQH/BAQDAgKkMA8GA1UdEwEB
+/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAC7QWGi8hQrwK5MeXgJ2LLYLHgy1
+GRfPaSsOXRCxZQ/qTPU0XgHI6ASMPjk2ki0GY7l2H+JkE+o86ZQAqFIkzHlQuo27
+RKxCZkV3RKf3clpWxcUgBb7t//Owl20awhpnbSzDygVTavgK+gWxTHHcCwU58rBn
+La7QBXtezKoslP8VgCdp6xOPGTnqpp/2JyJfCCtPuBKjdON5fTF5YwLz6o2bBv63
+dVS4brNSnxAe9V5XlsaKAlDEYGT8tIwj+5cG1cLtuFUfZahNf7eaQo6M9tkVPTF3
+RczYU+e7le4WhkNxjiqVl7osLBMLMkfxPFt1yEmZsUnWLTR0lItBHBmAnNk=
+-----END CERTIFICATE-----
+`;
+
+// client-certificate-data base64 decoded
+const clientCert = `
+-----BEGIN CERTIFICATE-----
+MIIC8TCCAdmgAwIBAgIHeZZS88OhuzANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQD
+EwprdWJlcm5ldGVzMB4XDTE5MDYxNzEzMjMzMVoXDTIwMDYxNjEzMjMzNlowNDEX
+MBUGA1UEChMOc3lzdGVtOm1hc3RlcnMxGTAXBgNVBAMTEGt1YmVybmV0ZXMtYWRt
+aW4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCreCPkb+r2eU4cddzs
+Lg9yFJ3vzF2Vn803YWXxgMMp2aYf+Dsfqd1BbflVb4Ey4Q5bHGkPMrN6bcd4Y2rK
+JsYPBATJ1zdKHf6XbF2PtxrxNAs97bQIN8PoulpDEyy5uLiOJgXqhm6sWuAw20/K
+aD7QUAXTIWXOChxVGnMDVtQl9/18D05p7WF2VzhhuizxtLx9UprfRPRjaEdRJV/E
+kfmdCK44SGcI7cnYZcRPJW8DEStRiniIBgalAvSuyZPQQslq9LWyP4vsO1sarAXm
+gxdkwAZp8ZKiQQsrPJ5HZO0Ba8KLtaABXzVOknauQK3gFD9elYEV12YTJk75A4Gk
+1CYVAgMBAAGjJzAlMA4GA1UdDwEB/wQEAwIFoDATBgNVHSUEDDAKBggrBgEFBQcD
+AjANBgkqhkiG9w0BAQsFAAOCAQEAFKzVjd3+l3L7PEPJUaE6pPXd4ZjMNGACgN3M
+4TzsT3ii+huI8gFWYK+xdAj0dthe2IQN/+R6/5OQ+RGUdWL8w2oqjv9K6nkzOTSW
+OcZq2HiHzK0cPsfdzc+DDrS3/ognaXxdAXC/qbg8+dc10S/r+LqQw8o/dEtF1EfX
+wdaM8TEmC2WQJ4wTDADy1nY/5iEME1w8lLkcx/6yFqVeTRt58toQq2sQL0kZGhVR
+bBOtS+BpBa+gSUDLn28QOwe9tdsMSFJEbW9eD9+G1Lm6OxZ5tVVRIpW7WF3OKL9f
+RKcr6hOGg4BpJKbQ+byZURGFuwOhOuEmTStFm3Zn7ApDhyBB7Q==
+-----END CERTIFICATE-----
+`;
+
+// client-key-data bas64 decoded
+const clientKey = `
+-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAq3gj5G/q9nlOHHXc7C4PchSd78xdlZ/NN2Fl8YDDKdmmH/g7
+H6ndQW35VW+BMuEOWxxpDzKzem3HeGNqyibGDwQEydc3Sh3+l2xdj7ca8TQLPe20
+CDfD6LpaQxMsubi4jiYF6oZurFrgMNtPymg+0FAF0yFlzgocVRpzA1bUJff9fA9O
+ae1hdlc4Ybos8bS8fVKa30T0Y2hHUSVfxJH5nQiuOEhnCO3J2GXETyVvAxErUYp4
+iAYGpQL0rsmT0ELJavS1sj+L7DtbGqwF5oMXZMAGafGSokELKzyeR2TtAWvCi7Wg
+AV81TpJ2rkCt4BQ/XpWBFddmEyZO+QOBpNQmFQIDAQABAoIBAQCFrwIUvKjshsC+
+canPPU3vfGFyLtwbpl4huj73nZMLEtRxAmBeHFoTBAGreWa6WzqNEEZcggPqBKLK
+moAMoVQzKsfs8Wz6zQ3L0sHTJUfNG+1T1/pPmeKUlI2A0/c/yOOid8SPB0ZL/AHk
+NWgs/z9Ru8H+zIAJtlpGg3t98/ksq7flNV2CuJ6Hu1uaV0yaylYgABAblYndz3l/
+MoL64jW9pdSa3IJKHj/ILebz2fSLxsRvzcAGv3mMNAs9Web5YtqEnN/LWdQf1VBQ
+UbaAd0h6npXki4Bqx264sIaYY3tq97PQZZi5/gKQUbfn4h5va4yqK8Wo3fibew/q
+erVMdN7VAoGBAM2MYrT3HbjS5vz2+28sw/w7QQG7Vp8zFvsI2+NsEtjPVb7DCTq8
+fnC82FFRZdV3DOq2zXnktYumvmttMwjPe17ft44GA41X9v43sVo3Qwn+AlTXm0Cy
+U2DdmFfNugFkP4bJWhV5Bn1wiMWldc13JT+AJvHBUik+F+ygkzNkiHnXAoGBANWO
+Zf77NIoUOaskgavba/0591gEwPo9kCKje+nLDPIjdkULiM7sh9Qq+IIRf9jZHPeL
++NfgPzBBrtoa41Llg5AA3j+Qz1v6NsOjolcj6mB+AiV+Y6mhcrxTG07XxS9pJocf
+joFKa76Vn3j7PAwOhKvHHzP273VFTtwB26bkYZnzAoGBAKKQfSCSsLcUVguLaqAq
+z3YVhvxPpdqTFYHFJ+Nd/inrEO2mYw5JNdcEBDGMJvYFCfo4SZo2AD9KyR89Zjd5
+oSEP3qQ8rWKER5wXf/TR7/tfIYjoXKl2X+skVvBajNm852E6rjx9U1yyO/nVOq4d
+pR/rwuFA/DISIenLtZ/XyvhRAoGBALHigXdZTDRQEJFMQW8jwNoXtL5uh0hqi2su
+/oKKDmiLvXJZ30VtpN7IRGQjq3i3sPdKcqdvNXM+4yTuDLj6URJchsQwHWmiDIf9
+/7XSRuLFU4hjtSSRRP81wqNz+944Gk2nrY5orUL9Yu7lZuksFrr3jDg+0su+Rafh
+LFPiHKKdAoGAKdHC0yHJmlcMABHm7gZYyitk9RfzXfEXIh8MbmBEI1MmLeU5dNjx
+TZKh48U4uWeqESFcBLCBqF3RLYyqX+1yBI3yfU3PJMtxavo1WAh2BTu6xzTDQRPf
+mk/EKMPIe5/2gWDyQV1JOvfo6bJiFVO/wBx+2Dxaiu+xnjXtjC3gUlc=
+-----END RSA PRIVATE KEY-----
+`;
+
+const instance = Axios.create({
+  httpsAgent: new https.Agent({
+    keepAlive: true,
+    ca: certAuthorityData,
+    cert: clientCert,
+    key: clientKey
+  })
+});
+
+instance.get(url + "/api/v1/namespaces").subscribe(data => {
+  console.log(data);
+});
